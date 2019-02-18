@@ -8,21 +8,20 @@ let camera,
 
 let light,
   floor,
-  firstBox,
-  secondBox,
   player
 
 let walls = {}
+let boxes = {}
 let obstacles = []
 
 const height = window.innerHeight
 const width = window.innerWidth
-let movementSpeed = 0.5
-const turnSpeed =  Math.PI * 0.015
+let movementSpeed = 0.2
+const turnSpeed =  Math.PI * 0.01
 const cameraHeight = 2
-const cameraDistance = -6
-const mapSize = 200
-const roadWidth = 15
+const cameraDistance = -3
+const mapSize = 70
+const roadWidth = 10
 const roadHeight = 10
 
 init()
@@ -35,11 +34,11 @@ function init () {
   renderer = new THREE.WebGLRenderer()
 
   renderer.setSize(width, height)
-  renderer.setClearColor(0xcccccc)
+  renderer.setClearColor(0x7EC0EE)
   renderer.shadowMap.enabled = true
 
   // Create a camera
-  camera = new THREE.PerspectiveCamera(50, width / height, 1, 1000)
+  camera = new THREE.PerspectiveCamera(100, width / height, 1, 1000)
 
   // Positioning the camera
 	camera.position.set(0,cameraHeight, cameraDistance)
@@ -48,30 +47,51 @@ function init () {
   // Create elements
   light = getAmbientLight(2)
   floor = getFloor(mapSize)
-  player = getBox(1, 1, 1, 0x343434)
+  player = getBox(1, 1, 1, 0x00ff33)
 
   walls.leftOuter = getBox(1, roadHeight, mapSize )
   walls.leftInner = getBox(1, roadHeight, mapSize - roadWidth * 2)
-  walls.frontOuter = getBox(mapSize , roadHeight, 1)
-  walls.frontInner = getBox(mapSize - roadWidth * 2, roadHeight, 1)
-  walls.rightOuter = getBox(1, roadHeight, mapSize )
-  walls.rightInner = getBox(1, roadHeight, mapSize - roadWidth * 2)
+  walls.frontOuter = getBox(mapSize/2 , roadHeight, 1)
+  walls.frontInner = getBox(mapSize/2 - roadWidth * 2, roadHeight, 1)
+  walls.rightOuter = getBox(1, roadHeight, mapSize/2 )
+  walls.rightInner = getBox(1, roadHeight, mapSize/2 - roadWidth * 2)
   walls.backOuter = getBox(mapSize, roadHeight, 1)
   walls.backInner = getBox(mapSize - roadWidth * 2, roadHeight, 1)
+
+  walls.firstCornerOuter = getBox(1, roadHeight, mapSize /2 )
+  walls.firstCornerInner = getBox(1, roadHeight, mapSize / 2)
+  walls.secondCornerOuter = getBox(mapSize /2, roadHeight, 1 )
+  walls.secondCornerInner = getBox(mapSize /2, roadHeight, 1)
+
+  boxes.firstBox = getBox(roadWidth/2, roadHeight/2, roadWidth/2)
+  boxes.secondBox = getBox(roadWidth/2, roadHeight/2, roadWidth/2)
+  boxes.thirdBox = getBox(roadWidth/2, roadHeight/2, roadWidth/2)
+  boxes.fourthBox = getBox(roadWidth/2, roadHeight/2, roadWidth/2)
  
   // Positioning of the elements
   light.position.set(-2, 10, -10)
   floor.rotation.x = Math.PI / 2
-  player.position.set((mapSize - roadWidth) / 2, player.geometry.parameters.height / 2, cameraDistance)
+  player.position.set((mapSize - roadWidth) / 2, player.geometry.parameters.height / 2, cameraDistance*5)
 
   walls.leftOuter.position.set(mapSize / 2,0,0)
   walls.leftInner.position.set(mapSize / 2 - roadWidth, 0, 0)
-  walls.frontOuter.position.set(0,0,mapSize / 2)
-  walls.frontInner.position.set(0,0,mapSize / 2 - roadWidth)
-  walls.rightOuter.position.set(-mapSize / 2,0,0)
-  walls.rightInner.position.set(-mapSize / 2 + roadWidth,0,0)
+  walls.frontOuter.position.set(mapSize/4,0,mapSize / 2)
+  walls.frontInner.position.set(mapSize/4,0,mapSize / 2 - roadWidth)
+  walls.rightOuter.position.set(-mapSize / 2,0, -mapSize/4)
+  walls.rightInner.position.set(-mapSize / 2 + roadWidth,0, -mapSize/4)
   walls.backOuter.position.set(0,0,-mapSize / 2)
   walls.backInner.position.set(0,0,-mapSize / 2 + roadWidth)
+
+  walls.firstCornerOuter.position.set(0,0, mapSize/4)
+  walls.firstCornerInner.position.set(roadWidth ,0, mapSize/4 - roadWidth)
+  walls.secondCornerOuter.position.set(-mapSize/4,0, 0)
+  walls.secondCornerInner.position.set(-mapSize/4 + roadWidth ,0, -roadWidth)
+
+  boxes.firstBox.position.set(mapSize/2 - roadWidth + boxes.firstBox.geometry.parameters.width/2, boxes.firstBox.geometry.parameters.height/2, mapSize/5)
+  boxes.secondBox.position.set(mapSize/2 - boxes.secondBox.geometry.parameters.width/2, boxes.secondBox.geometry.parameters.height/2, 0)
+  boxes.thirdBox.position.set(mapSize/5, boxes.thirdBox.geometry.parameters.height/2, -mapSize/2 + boxes.thirdBox.geometry.parameters.width/2)
+  boxes.fourthBox.position.set(0, boxes.fourthBox.geometry.parameters.height/2, -mapSize/2 - boxes.fourthBox.geometry.parameters.width/2 + roadWidth)
+
 
   // Camera follows player
   player.add(camera)
@@ -84,6 +104,11 @@ function init () {
   for (let wall in walls) {
     scene.add(walls[wall])
     obstacles.push(walls[wall])
+  }
+
+  for (let box in boxes) {
+    scene.add(boxes[box])
+    obstacles.push(boxes[box])
   }
 
   document.body.appendChild(renderer.domElement)
@@ -176,7 +201,7 @@ function getPlane (size) {
 function getFloor (size) {
   const floorTexture = new THREE.ImageUtils.loadTexture('images/floor.png');
 	floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
-  floorTexture.repeat.set(mapSize / 10, mapSize / 10);
+  floorTexture.repeat.set(mapSize / 15, mapSize / 15);
   
   const floorMaterial = new THREE.MeshBasicMaterial({
     map: floorTexture, side: THREE.DoubleSide
