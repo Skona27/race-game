@@ -4,7 +4,7 @@
 let camera,
   scene,
   renderer,
-  controls
+  loaderFBX
 
 let light,
   floor,
@@ -16,13 +16,14 @@ let obstacles = []
 
 const height = window.innerHeight
 const width = window.innerWidth
-let movementSpeed = 0.2
+let movementSpeed = 0.25
 const turnSpeed =  Math.PI * 0.01
-const cameraHeight = 2
-const cameraDistance = -3
-const mapSize = 70
+const cameraHeight = 1
+const cameraDistance = -2
+const mapSize = 100
 const roadWidth = 10
 const roadHeight = 10
+const modelScale = 0.004
 
 init()
 
@@ -36,9 +37,10 @@ function init () {
   renderer.setSize(width, height)
   renderer.setClearColor(0x7EC0EE)
   renderer.shadowMap.enabled = true
+  renderer.sortObjects = false
 
   // Create a camera
-  camera = new THREE.PerspectiveCamera(100, width / height, 1, 1000)
+  camera = new THREE.PerspectiveCamera(90, width / height, 1, mapSize)
 
   // Positioning the camera
 	camera.position.set(0,cameraHeight, cameraDistance)
@@ -47,7 +49,7 @@ function init () {
   // Create elements
   light = getAmbientLight(2)
   floor = getFloor(mapSize)
-  player = getBox(1, 1, 1, 0x00ff33)
+  player = getTransparentBox(modelScale*200, 1, modelScale*400)
 
   walls.leftOuter = getBox(1, roadHeight, mapSize )
   walls.leftInner = getBox(1, roadHeight, mapSize - roadWidth * 2)
@@ -92,6 +94,13 @@ function init () {
   boxes.thirdBox.position.set(mapSize/5, boxes.thirdBox.geometry.parameters.height/2, -mapSize/2 + boxes.thirdBox.geometry.parameters.width/2)
   boxes.fourthBox.position.set(0, boxes.fourthBox.geometry.parameters.height/2, -mapSize/2 - boxes.fourthBox.geometry.parameters.width/2 + roadWidth)
 
+  // Create a model loader
+  loaderFBX = new THREE.FBXLoader()
+
+  loaderFBX.load('models/Lamborghini_Aventador.fbx', car => {
+    car.scale.set(modelScale, modelScale, modelScale)
+    player.add(car)
+  })
 
   // Camera follows player
   player.add(camera)
@@ -183,6 +192,17 @@ function getBox (width, height, depth, color = 0x262626) {
   mesh.castShadow = true
 
   return mesh
+}
+
+function getTransparentBox (width, height, depth) {
+  const box = new THREE.BoxGeometry(width, height, depth)
+  const material = new THREE.MeshPhongMaterial({ 
+    color: 0xffffff,
+    opacity: 0,
+    transparent: true
+  })
+
+  return new THREE.Mesh(box, material)
 }
 
 function getPlane (size) {
